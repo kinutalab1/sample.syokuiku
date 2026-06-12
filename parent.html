@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ほごしゃ ページ | たべものたんけんたい</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { background: linear-gradient(160deg, #F0FFF5 0%, #FFF8F0 100%); min-height: 100vh; }
+
+    .parent-header {
+      background: linear-gradient(135deg, #2ECC71 0%, #A8E063 100%);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(46, 204, 113, 0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .parent-header-title {
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 900;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .parent-header-sub {
+      color: rgba(255,255,255,0.85);
+      font-size: 0.82rem;
+    }
+
+    /* サマリーカード */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .summary-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px 16px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .summary-icon { font-size: 2rem; margin-bottom: 8px; }
+    .summary-num {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--primary);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .summary-label { font-size: 0.78rem; color: var(--text-light); font-weight: 600; }
+
+    /* タブ */
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      background: white;
+      border-radius: 50px;
+      padding: 6px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 8px;
+      border: none;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      color: var(--text-light);
+      background: transparent;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #2ECC71, #A8E063);
+      color: white;
+      box-shadow: 0 3px 10px rgba(46, 204, 113, 0.3);
+    }
+
+    /* 子どもプロフィール */
+    .child-profile-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .child-avatar-lg {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FFF0E0, #FFE0C8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      border: 3px solid #FFD4B8;
+      flex-shrink: 0;
+    }
+
+    .child-info { flex: 1; }
+    .child-info-name { font-size: 1.4rem; font-weight: 900; color: var(--text-dark); margin-bottom: 4px; }
+    .child-info-class { font-size: 0.875rem; color: var(--text-light); margin-bottom: 8px; }
+
+    /* 進捗バー詳細 */
+    .progress-detail {
+      margin-bottom: 16px;
+    }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .progress-label {
+      width: 120px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      flex-shrink: 0;
+    }
+
+    .progress-bar-wrap { flex: 1; }
+
+    .progress-pct {
+      width: 48px;
+      text-align: right;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* 活動ログ */
+    .log-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid #F0E8E0;
+    }
+
+    .log-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .log-food { background: #FFF0E5; }
+    .log-pron { background: #E5F9F8; }
+    .log-quiz { background: #F0FFE5; }
+
+    .log-info { flex: 1; }
+    .log-title { font-weight: 700; color: var(--text-dark); font-size: 0.9rem; }
+    .log-date { font-size: 0.78rem; color: var(--text-light); margin-top: 2px; }
+
+    .log-score {
+      font-weight: 900;
+      font-size: 1.1rem;
+    }
+
+    /* チャートコンテナ */
+    .chart-container {
+      background: white;
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .chart-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 480px) {
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+      .child-profile-card { flex-direction: column; text-align: center; }
+      .progress-label { width: 90px; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-spinner"></div>
+  <p class="loading-text">よみこみちゅう...</p>
+</div>
+
+<!-- ヘッダー -->
+<header class="parent-header">
+  <div>
+    <div class="parent-header-title">👨‍👩‍👧 ほごしゃ ページ</div>
+    <div class="parent-header-sub" id="parentNameDisp">ようこそ</div>
+  </div>
+  <button class="btn-logout" onclick="App.logout()">ログアウト</button>
+</header>
+
+<div class="main-container fade-in">
+
+  <!-- サマリーカード -->
+  <div class="summary-grid" id="summaryGrid">
+    <div class="summary-card">
+      <div class="summary-icon">📅</div>
+      <div class="summary-num" id="sumDays">0</div>
+      <div class="summary-label">りよう回数</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-icon">🌟</div>
+      <div class="summary-num" id="sumScore">0%</div>
+      <div class="summary-label">へいきんスコア</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-icon">✅</div>
+      <div class="summary-num" id="sumCompleted">0</div>
+      <div class="summary-label">かんりょう数</div>
+    </div>
+  </div>
+
+  <!-- タブ -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('progress', this)">📊 たっせいかんりょう</button>
+    <button class="tab-btn" onclick="switchTab('log', this)">📋 かつどうりれき</button>
+    <button class="tab-btn" onclick="switchTab('chart', this)">📈 グラフ</button>
+  </div>
+
+  <!-- タブ: 進捗 -->
+  <div id="tabProgress">
+    <!-- 子どもプロフィール -->
+    <div class="child-profile-card" id="childProfileCard">
+      <div class="child-avatar-lg" id="childAvatarLg">🐻</div>
+      <div class="child-info">
+        <div class="child-info-name" id="childNameDisp">よみこみちゅう...</div>
+        <div class="child-info-class" id="childClassDisp"></div>
+        <div class="badge-grid" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;" id="childStatusBadges"></div>
+      </div>
+    </div>
+
+    <!-- 進捗バー -->
+    <div class="card">
+      <div class="section-title">📊 がくしゅうの しんちょく</div>
+      <div class="progress-detail" id="progressDetail">
+        <div class="progress-row">
+          <div class="progress-label">🥦 たべもの</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="pFood" style="width:0%"></div></div>
+          </div>
+          <div class="progress-pct" id="pctFood">0%</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-label">🎤 はやくちことば</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar">
+              <div class="progress-fill" id="pPron" style="width:0%;background:linear-gradient(90deg,#4ECDC4,#6BE0D8)"></div>
+            </div>
+          </div>
+          <div class="progress-pct" id="pctPron">0%</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-label">❓ クイズ</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar">
+              <div class="progress-fill" id="pQuiz" style="width:0%;background:linear-gradient(90deg,#A8E063,#6DD47E)"></div>
+            </div>
+          </div>
+          <div class="progress-pct" id="pctQuiz">0%</div>
+        </div>
+      </div>
+
+      <div style="background:#F8F2EE;border-radius:14px;padding:16px;margin-top:8px;">
+        <div class="section-title" style="font-size:0.95rem;margin-bottom:12px;">💬 せんせいからのコメント</div>
+        <p style="color:var(--text-mid);font-size:0.9rem;line-height:1.7;" id="teacherComment">
+          まいにち たのしく がんばっています！🌟
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- タブ: ログ -->
+  <div id="tabLog" class="hidden">
+    <div class="card">
+      <div class="section-title">📋 かつどうりれき</div>
+      <div id="logList">
+        <p style="color:var(--text-light);text-align:center;padding:20px;">よみこみちゅう...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- タブ: チャート -->
+  <div id="tabChart" class="hidden">
+    <div class="chart-container" style="height:280px;">
+      <div class="chart-title">📊 がくしゅう ひうち（しゅるいべつ）</div>
+      <canvas id="typeChart" style="height:200px;"></canvas>
+    </div>
+    <div class="chart-container" style="height:280px;">
+      <div class="chart-title">📈 スコアの うつりかわり</div>
+      <canvas id="scoreChart" style="height:200px;"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+let session, childUser, logs = [];
+let typeChartInstance, scoreChartInstance;
+
+async function init() {
+  session = App.requireAuth(['parent']);
+  if (!session) return;
+
+  document.getElementById('parentNameDisp').textContent = `${session.name} さん`;
+  App.showLoading();
+
+  try {
+    // 同じメールアドレスの子どもを探す
+    const allUsers = await App.fetchUsers();
+    const users = allUsers.data || [];
+
+    // 保護者のメールアドレスで紐づく子どもを探す（保護者ユーザー自身のemailとparent_emailが一致する子ども）
+    const myUser = users.find(u => u.id === session.id);
+    const myEmail = myUser?.email || '';
+
+    childUser = users.find(u => u.role === 'child' && u.parent_email === myEmail);
+    if (!childUser) {
+      // 同じメールアドレスの子どもを探す（登録時に同じメールで登録された場合）
+      childUser = users.find(u => u.role === 'child' && u.email === myEmail);
+    }
+
+    // 活動ログ取得
+    const logResult = await App.fetchActivityLogs();
+    logs = (logResult.data || []).filter(l =>
+      childUser ? l.child_name === childUser.child_name : false
+    );
+
+    renderChildProfile();
+    renderSummary();
+    renderLogs();
+    renderCharts();
+
+  } catch(e) {
+    console.error(e);
+  }
+
+  App.hideLoading();
+}
+
+function renderChildProfile() {
+  if (!childUser) {
+    document.getElementById('childNameDisp').textContent = 'こどもが みつかりません';
+    return;
+  }
+  document.getElementById('childAvatarLg').textContent = App.getAvatar(childUser.avatar);
+  document.getElementById('childNameDisp').textContent = `${childUser.child_name}ちゃん`;
+  document.getElementById('childClassDisp').textContent = childUser.class_name
+    ? `${childUser.class_name} 🏫`
+    : '';
+
+  const badges = document.getElementById('childStatusBadges');
+  badges.innerHTML = `
+    <span class="badge badge-child">こども</span>
+    ${childUser.class_name ? `<span class="badge" style="background:#E0F0FF;color:#1A6BC4;">${childUser.class_name}</span>` : ''}
+  `;
+}
+
+function renderSummary() {
+  document.getElementById('sumDays').textContent = logs.length;
+  const avg = logs.length > 0
+    ? Math.round(logs.reduce((s, l) => s + (l.score || 0), 0) / logs.length)
+    : 0;
+  document.getElementById('sumScore').textContent = `${avg}%`;
+  document.getElementById('sumCompleted').textContent = logs.filter(l => l.completed).length;
+
+  // プログレスバー計算
+  const food = logs.filter(l => l.activity_type === 'food_study');
+  const pron = logs.filter(l => l.activity_type === 'pronunciation');
+  const quiz = logs.filter(l => l.activity_type === 'quiz');
+
+  const avgScore = arr => arr.length > 0
+    ? Math.round(arr.reduce((s, l) => s + (l.score||0), 0) / arr.length)
+    : 0;
+
+  const foodPct = avgScore(food);
+  const pronPct = avgScore(pron);
+  const quizPct = avgScore(quiz);
+
+  document.getElementById('pFood').style.width = `${foodPct}%`;
+  document.getElementById('pctFood').textContent = `${foodPct}%`;
+  document.getElementById('pPron').style.width = `${pronPct}%`;
+  document.getElementById('pctPron').textContent = `${pronPct}%`;
+  document.getElementById('pQuiz').style.width = `${quizPct}%`;
+  document.getElementById('pctQuiz').textContent = `${quizPct}%`;
+
+  // コメント生成
+  const total = foodPct + pronPct + quizPct;
+  let comment = 'まいにち たのしく がんばっています！🌟';
+  if (total >= 200) comment = 'とても よく がんばっています！ひきつづき おうえんしています！🏆';
+  else if (total >= 100) comment = 'すこしずつ うまく なっています。まいにち つづけると もっと うまく なるよ！👍';
+  else if (total > 0) comment = 'はじめたばかりです。これから いっしょに がんばりましょう！😊';
+  else comment = 'まだ かつどうが はじまっていません。こどもに うながして みてください。🌱';
+
+  document.getElementById('teacherComment').textContent = comment;
+}
+
+function renderLogs() {
+  const container = document.getElementById('logList');
+  if (logs.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-light);text-align:center;padding:24px;">かつどうが ありません</p>';
+    return;
+  }
+
+  const iconClass = { food_study: 'log-food', pronunciation: 'log-pron', quiz: 'log-quiz' };
+
+  container.innerHTML = [...logs].reverse().slice(0, 20).map(l => `
+    <div class="log-item">
+      <div class="log-icon ${iconClass[l.activity_type] || ''}">
+        ${l.activity_type === 'food_study' ? '🥦' : l.activity_type === 'pronunciation' ? '🎤' : '❓'}
+      </div>
+      <div class="log-info">
+        <div class="log-title">${App.activityLabel(l.activity_type)}</div>
+        <div class="log-date">${l.details || ''} • ${App.formatDate(l.created_at)}</div>
+      </div>
+      <div class="log-score" style="color:${App.scoreColor(l.score || 0)}">
+        ${l.score || 0}点
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCharts() {
+  // タイプ別棒グラフ
+  const typeCtx = document.getElementById('typeChart').getContext('2d');
+  const food = logs.filter(l => l.activity_type === 'food_study');
+  const pron = logs.filter(l => l.activity_type === 'pronunciation');
+  const quiz = logs.filter(l => l.activity_type === 'quiz');
+
+  const avg = arr => arr.length > 0
+    ? Math.round(arr.reduce((s,l) => s+(l.score||0), 0) / arr.length)
+    : 0;
+
+  if (typeChartInstance) typeChartInstance.destroy();
+  typeChartInstance = new Chart(typeCtx, {
+    type: 'bar',
+    data: {
+      labels: ['🥦 たべもの', '🎤 はやくちことば', '❓ クイズ'],
+      datasets: [{
+        label: 'へいきんスコア',
+        data: [avg(food), avg(pron), avg(quiz)],
+        backgroundColor: ['#FF8C69', '#4ECDC4', '#A8E063'],
+        borderRadius: 10,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
+      }
+    }
+  });
+
+  // スコア推移
+  const scoreCtx = document.getElementById('scoreChart').getContext('2d');
+  const recentLogs = [...logs].slice(-8);
+
+  if (scoreChartInstance) scoreChartInstance.destroy();
+  scoreChartInstance = new Chart(scoreCtx, {
+    type: 'line',
+    data: {
+      labels: recentLogs.map((_, i) => `${i+1}回目`),
+      datasets: [{
+        label: 'スコア',
+        data: recentLogs.map(l => l.score || 0),
+        borderColor: '#FF6B35',
+        backgroundColor: 'rgba(255, 107, 53, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 6,
+        pointBackgroundColor: '#FF6B35',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 100, ticks: { callback: v => v + 'pt' } }
+      }
+    }
+  });
+}
+
+// タブ切り替え
+function switchTab(tab, btn) {
+  ['tabProgress','tabLog','tabChart'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
+  btn.classList.add('active');
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>あたらしく とうろく 🌟 | たべものたんけんたい</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: linear-gradient(160deg, #FFF0E0 0%, #E8F8E8 100%);
+      min-height: 100vh;
+    }
+
+    .page-header {
+      background: linear-gradient(135deg, var(--accent) 0%, #6BE0A8 100%);
+      padding: 20px 24px;
+      text-align: center;
+    }
+
+    .page-header h1 {
+      color: white;
+      font-size: 1.6rem;
+      font-weight: 900;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.15);
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: white;
+      background: rgba(255,255,255,0.25);
+      border: none;
+      border-radius: 50px;
+      padding: 8px 16px;
+      font-family: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.875rem;
+      margin-bottom: 12px;
+      text-decoration: none;
+    }
+
+    .register-container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 28px 16px 80px;
+    }
+
+    /* アバター選択 */
+    .avatar-section {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .avatar-title {
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: var(--text-dark);
+      font-size: 1rem;
+    }
+
+    .avatar-grid {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .avatar-option {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 3px solid #E8DDD8;
+      background: white;
+      font-size: 2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .avatar-option:hover {
+      border-color: var(--primary);
+      transform: scale(1.1);
+    }
+
+    .avatar-option.selected {
+      border-color: var(--primary);
+      background: #FFF0E5;
+      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.2);
+      transform: scale(1.12);
+    }
+
+    /* フォームカード */
+    .register-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--text-dark);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .note-text {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-top: 6px;
+    }
+
+    /* 完了モーダル */
+    .success-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .success-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 40px 32px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .success-title {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #27AE60;
+      margin-bottom: 8px;
+    }
+
+    .success-msg {
+      color: var(--text-mid);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 480px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ローディング -->
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-spinner"></div>
+  <p class="loading-text">とうろくちゅう...</p>
+</div>
+
+<!-- ヘッダー -->
+<div class="page-header">
+  <a href="index.html" class="back-btn">← もどる</a>
+  <h1>🌟 あたらしく とうろく</h1>
+</div>
+
+<div class="register-container fade-in">
+
+  <!-- アバター選択 -->
+  <div class="register-card">
+    <div class="card-title">🎨 アイコンを えらぼう</div>
+    <div class="avatar-section">
+      <div class="avatar-grid" id="avatarGrid">
+        <!-- JS で生成 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- こども情報 -->
+  <div class="register-card">
+    <div class="card-title">🧒 こどもの じょうほう</div>
+    <div id="registerAlert" class="alert alert-error hidden"></div>
+
+    <div class="form-group">
+      <label class="form-label">こどもの なまえ ✏️</label>
+      <input type="text" id="childName" class="form-input"
+             placeholder="例：さくら" required maxlength="20">
+    </div>
+  </div>
+
+  <!-- 保護者情報 -->
+  <div class="register-card">
+    <div class="card-title">👨‍👩‍👧 ほごしゃの じょうほう</div>
+
+    <div class="form-group">
+      <label class="form-label">メールアドレス 📧</label>
+      <input type="email" id="email" class="form-input"
+             placeholder="example@mail.com" required>
+      <p class="note-text">※ ほごしゃが ろぐいんするときに つかいます</p>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">パスワード 🔑</label>
+        <input type="password" id="password" class="form-input"
+               placeholder="6もじ いじょう" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label class="form-label">パスワード（かくにん）</label>
+        <input type="password" id="passwordConfirm" class="form-input"
+               placeholder="もういちど にゅうりょく" required minlength="6">
+      </div>
+    </div>
+  </div>
+
+  <!-- クラス -->
+  <div class="register-card">
+    <div class="card-title">🏫 クラスを えらぼう（にゅうりょくしなくてもOK）</div>
+    <div class="form-group">
+      <label class="form-label">クラスめい</label>
+      <select id="className" class="form-input">
+        <option value="">えらばない</option>
+        <option value="たんぽぽぐみ">たんぽぽぐみ</option>
+        <option value="ひまわりぐみ">ひまわりぐみ</option>
+        <option value="さくらぐみ">さくらぐみ</option>
+        <option value="ほしぐみ">ほしぐみ</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 登録ボタン -->
+  <button class="btn btn-accent btn-lg" style="width:100%;font-size:1.2rem;"
+          onclick="handleRegister()">
+    🌟 とうろくする！
+  </button>
+</div>
+
+<!-- 完了モーダル -->
+<div id="successModal" class="success-modal hidden">
+  <div class="success-box">
+    <span class="success-icon">🎉</span>
+    <div class="success-title">とうろく かんりょう！</div>
+    <p class="success-msg" id="successMsg">おめでとう！<br>これから たべもの たんけんを はじめよう！</p>
+    <button class="btn btn-primary btn-lg" onclick="window.location.href='index.html'">
+      ログイン がめんへ 🚀
+    </button>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  const avatarEmojis = App.avatarEmojis;
+  let selectedAvatar = 1;
+
+  // アバターグリッド生成
+  function renderAvatars() {
+    const grid = document.getElementById('avatarGrid');
+    grid.innerHTML = avatarEmojis.map((emoji, i) => `
+      <button type="button"
+              class="avatar-option ${i === 0 ? 'selected' : ''}"
+              data-idx="${i+1}"
+              onclick="selectAvatar(this, ${i+1})">
+        ${emoji}
+      </button>
+    `).join('');
+  }
+
+  function selectAvatar(el, num) {
+    document.querySelectorAll('.avatar-option').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedAvatar = num;
+  }
+
+  // 登録処理
+  async function handleRegister() {
+    const childName = document.getElementById('childName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('passwordConfirm').value;
+    const className = document.getElementById('className').value;
+    const alertEl = document.getElementById('registerAlert');
+
+    alertEl.classList.add('hidden');
+
+    // バリデーション
+    if (!childName) {
+      showAlert('こどもの なまえを にゅうりょくしてください');
+      return;
+    }
+    if (!email) {
+      showAlert('メールアドレスを にゅうりょくしてください');
+      return;
+    }
+    if (password.length < 6) {
+      showAlert('パスワードは 6もじ いじょう にゅうりょくしてください');
+      return;
+    }
+    if (password !== passwordConfirm) {
+      showAlert('パスワードが あっていません');
+      return;
+    }
+
+    App.showLoading('とうろくちゅう...');
+
+    try {
+      // メール重複チェック
+      const existing = await App.fetchUsers();
+      const dup = (existing.data || []).find(u => u.email === email);
+      if (dup) {
+        App.hideLoading();
+        showAlert('このメールアドレスは すでに とうろくされています');
+        return;
+      }
+
+      // 子どもアカウント登録
+      await App.createUser({
+        child_name: childName,
+        email: email,
+        password: password,
+        role: 'child',
+        avatar: String(selectedAvatar),
+        parent_email: email,
+        class_name: className,
+      });
+
+      // 保護者アカウント登録
+      await App.createUser({
+        child_name: `${childName}の ほごしゃ`,
+        email: email,
+        password: password,
+        role: 'parent',
+        avatar: '5',
+        parent_email: '',
+        class_name: className,
+      });
+
+      App.hideLoading();
+
+      document.getElementById('successMsg').innerHTML =
+        `<strong>${childName}</strong>ちゃん、ようこそ！<br>これから たべもの たんけんを はじめよう！`;
+      document.getElementById('successModal').classList.remove('hidden');
+
+    } catch (err) {
+      App.hideLoading();
+      showAlert('エラーが おきました。もういちど おためしください。');
+    }
+  }
+
+  function showAlert(msg) {
+    const el = document.getElementById('registerAlert');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  renderAvatars();
+</script>
+</body>
+</html>

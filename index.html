@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>たべもの たんけんたい 🍎</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(160deg, #FFF0E0 0%, #E0F7F4 50%, #FFF0F5 100%);
+      min-height: 100vh;
+    }
+
+    /* ===== ヒーロー ===== */
+    .hero-section {
+      text-align: center;
+      padding: 40px 20px 16px;
+      position: relative;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 8vw, 3.5rem);
+      font-weight: 900;
+      color: var(--primary);
+      text-shadow: 3px 3px 0 #FFD4B8, 5px 5px 0 rgba(0,0,0,0.05);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(0.9rem, 3vw, 1.1rem);
+      color: var(--text-mid);
+      font-weight: 500;
+      margin-bottom: 32px;
+    }
+
+    .hero-emojis {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      font-size: 3rem;
+      margin-bottom: 32px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    /* ===== ロール選択カード ===== */
+    .role-selection {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    .role-title {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 20px;
+    }
+
+    .role-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .role-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 24px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      border: 3px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .role-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .role-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.14);
+    }
+
+    .role-card.child-card {
+      border-color: var(--primary-light);
+      background: linear-gradient(135deg, #FFF8F0, #FFFCF8);
+    }
+    .role-card.child-card:hover { border-color: var(--primary); }
+
+    .role-card.parent-card {
+      border-color: #A8E063;
+      background: linear-gradient(135deg, #F5FFF0, #FCFFFA);
+    }
+    .role-card.parent-card:hover { border-color: var(--accent); }
+
+    .role-card.teacher-card {
+      border-color: #4EC9E8;
+      background: linear-gradient(135deg, #F0FBFF, #F8FEFF);
+    }
+    .role-card.teacher-card:hover { border-color: var(--secondary); }
+
+    .role-icon {
+      font-size: 3.5rem;
+      margin-bottom: 12px;
+      display: block;
+      line-height: 1;
+    }
+
+    .role-name {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--text-dark);
+      margin-bottom: 6px;
+    }
+
+    .role-desc {
+      font-size: 0.78rem;
+      color: var(--text-light);
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .child-badge {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 50px;
+      margin-top: 8px;
+    }
+
+    /* ===== 管理者リンク ===== */
+    .admin-link-wrap {
+      text-align: right;
+      padding: 0 8px;
+    }
+    .admin-link {
+      color: var(--text-light);
+      font-size: 0.78rem;
+      cursor: pointer;
+      text-decoration: underline;
+      background: none;
+      border: none;
+      font-family: inherit;
+      transition: color 0.2s;
+    }
+    .admin-link:hover { color: var(--text-mid); }
+
+    /* ===== 新規登録リンク ===== */
+    .register-wrap {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .register-link {
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    /* ===== モーダル ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: fadeIn 0.3s ease;
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--text-dark);
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--text-light);
+      line-height: 1;
+    }
+
+    /* ===== 子ども選択 ===== */
+    .child-picker {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .child-pick-btn {
+      background: white;
+      border: 3px solid #F0E8E0;
+      border-radius: 18px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .child-pick-btn:hover {
+      border-color: var(--primary);
+      background: #FFF8F0;
+      transform: scale(1.03);
+    }
+
+    .child-pick-emoji {
+      font-size: 2.2rem;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .child-pick-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    /* ===== デコ ===== */
+    .deco-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+    .deco-item {
+      position: absolute;
+      opacity: 0.08;
+      font-size: 4rem;
+      animation: floatRand 8s ease-in-out infinite;
+    }
+    @keyframes floatRand {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-30px) rotate(15deg); }
+    }
+
+    @media (max-width: 480px) {
+      .role-cards { grid-template-columns: 1fr; }
+      .role-icon { font-size: 2.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 背景デコ -->
+<div class="deco-bg">
+  <span class="deco-item" style="top:5%;left:5%;animation-delay:0s">🍎</span>
+  <span class="deco-item" style="top:15%;right:8%;animation-delay:1s">🥦</span>
+  <span class="deco-item" style="top:60%;left:3%;animation-delay:2s">🍊</span>
+  <span class="deco-item" style="top:75%;right:5%;animation-delay:3s">🍇</span>
+  <span class="deco-item" style="top:40%;left:90%;animation-delay:0.5s">🌽</span>
+  <span class="deco-item" style="top:85%;left:40%;animation-delay:1.5s">🍓</span>
+</div>
+
+<!-- ローディング -->
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-spinner"></div>
+  <p class="loading-text">よみこみちゅう...</p>
+</div>
+
+<!-- ヒーロー -->
+<section class="hero-section fade-in">
+  <div class="hero-emojis">🍎🥦🍊🎤</div>
+  <h1 class="hero-title">たべもの<br>たんけんたい</h1>
+  <p class="hero-subtitle">たのしく たべて、げんきな くちに なろう！</p>
+</section>
+
+<!-- ロール選択 -->
+<div class="role-selection fade-in">
+  <p class="role-title">👇 だれがつかいますか？</p>
+
+  <div class="role-cards">
+    <!-- こども -->
+    <div class="role-card child-card" onclick="openChildModal()">
+      <span class="role-icon">🧒</span>
+      <div class="role-name">こども</div>
+      <div class="role-desc">たのしく まなぼう</div>
+      <span class="child-badge">パスワードなし</span>
+    </div>
+
+    <!-- 保護者 -->
+    <div class="role-card parent-card" onclick="openLoginModal('parent')">
+      <span class="role-icon">👨‍👩‍👧</span>
+      <div class="role-name">ほごしゃ</div>
+      <div class="role-desc">おこさんの<br>じょうきょうを みる</div>
+    </div>
+
+    <!-- 先生 -->
+    <div class="role-card teacher-card" onclick="openLoginModal('teacher')">
+      <span class="role-icon">👩‍🏫</span>
+      <div class="role-name">せんせい</div>
+      <div class="role-desc">クラスの<br>たっせいを かくにん</div>
+    </div>
+  </div>
+
+  <!-- 管理者 -->
+  <div class="admin-link-wrap">
+    <button class="admin-link" onclick="openLoginModal('admin')">
+      🔒 管理者ログイン
+    </button>
+  </div>
+
+  <!-- 新規登録 -->
+  <div class="register-wrap">
+    <p style="color:var(--text-mid);font-size:0.9rem;margin-bottom:8px;">
+      はじめてつかう かたは
+    </p>
+    <button class="register-link" onclick="window.location.href='register.html'">
+      ✨ あたらしく とうろくする
+    </button>
+  </div>
+</div>
+
+<!-- ===== こども選択モーダル ===== -->
+<div id="childModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('childModal')">✕</button>
+    <div class="modal-title">👤 だれですか？</div>
+    <div id="childPickerArea" class="child-picker">
+      <p style="color:var(--text-light);text-align:center;grid-column:1/-1;">
+        <span class="loading-spinner" style="width:30px;height:30px;border-width:4px;display:inline-block;"></span>
+      </p>
+    </div>
+    <p style="text-align:center;color:var(--text-light);font-size:0.8rem;">
+      なまえが ないときは とうろくしてね 👇
+    </p>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn btn-outline btn-sm" onclick="window.location.href='register.html'">
+        とうろくする
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ログインモーダル（保護者・先生・管理者） ===== -->
+<div id="loginModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    <div class="modal-title" id="loginModalTitle">ログイン</div>
+
+    <div id="loginAlert" class="alert alert-error hidden"></div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <input type="hidden" id="loginRole" value="">
+
+      <div class="form-group">
+        <label class="form-label">📧 メールアドレス</label>
+        <input type="email" id="loginEmail" class="form-input"
+               placeholder="example@mail.com" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🔑 パスワード</label>
+        <input type="password" id="loginPassword" class="form-input"
+               placeholder="パスワードをにゅうりょく" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;font-size:1.1rem;">
+        ログイン 🚀
+      </button>
+    </form>
+
+    <!-- デモ用ヒント -->
+    <div id="loginHint" style="margin-top:16px;padding:12px;background:#F8F2EE;border-radius:12px;font-size:0.8rem;color:var(--text-mid);">
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  // ===== モーダル操作 =====
+  function openModal(id) {
+    document.getElementById(id).classList.remove('hidden');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.add('hidden');
+  }
+
+  // ===== こども選択モーダル =====
+  async function openChildModal() {
+    openModal('childModal');
+    const area = document.getElementById('childPickerArea');
+    area.innerHTML = '<p style="text-align:center;color:var(--text-light);grid-column:1/-1;">よみこみちゅう...</p>';
+
+    try {
+      const result = await App.fetchUsers();
+      const children = (result.data || []).filter(u => u.role === 'child');
+
+      if (children.length === 0) {
+        area.innerHTML = `
+          <p style="text-align:center;color:var(--text-light);grid-column:1/-1;padding:20px;">
+            こどもが とうろくされていません
+          </p>`;
+        return;
+      }
+
+      area.innerHTML = children.map(c => `
+        <button class="child-pick-btn" onclick="loginAsChild('${c.id}','${c.child_name}','${c.avatar||1}')">
+          <span class="child-pick-emoji">${App.getAvatar(c.avatar)}</span>
+          <div class="child-pick-name">${c.child_name}</div>
+        </button>
+      `).join('');
+    } catch (e) {
+      area.innerHTML = '<p style="grid-column:1/-1;color:red;">よみこみに しっぱいしました</p>';
+    }
+  }
+
+  function loginAsChild(id, name, avatar) {
+    App.setSession({ id, name, role: 'child', avatar });
+    closeModal('childModal');
+    window.location.href = 'child.html';
+  }
+
+  // ===== ログインモーダル（保護者・先生・管理者） =====
+  const roleLabels = {
+    parent: '👨‍👩‍👧 ほごしゃ ログイン',
+    teacher: '👩‍🏫 せんせい ログイン',
+    admin: '🔒 管理者ログイン',
+  };
+
+  const loginHints = {
+    parent: '📝 テスト用<br>メール: parent1@test.com<br>PW: parent1234',
+    teacher: '📝 テスト用<br>メール: teacher@test.com<br>PW: teacher1234',
+    admin: '📝 テスト用<br>メール: admin@test.com<br>PW: admin1234',
+  };
+
+  function openLoginModal(role) {
+    document.getElementById('loginRole').value = role;
+    document.getElementById('loginModalTitle').textContent = roleLabels[role] || 'ログイン';
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginAlert').classList.add('hidden');
+    document.getElementById('loginHint').innerHTML = loginHints[role] || '';
+    openModal('loginModal');
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const role = document.getElementById('loginRole').value;
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const alertEl = document.getElementById('loginAlert');
+
+    alertEl.classList.add('hidden');
+    App.showLoading('ログインちゅう...');
+
+    try {
+      const user = await App.findUser(email, password, role);
+      if (!user) {
+        App.hideLoading();
+        alertEl.textContent = 'メールアドレスまたはパスワードが ちがいます';
+        alertEl.classList.remove('hidden');
+        return;
+      }
+
+      App.setSession({ id: user.id, name: user.child_name, role: user.role, avatar: user.avatar });
+      App.hideLoading();
+      closeModal('loginModal');
+      App.redirectByRole(role);
+    } catch (err) {
+      App.hideLoading();
+      alertEl.textContent = 'エラーが おきました。もういちど おためしください。';
+      alertEl.classList.remove('hidden');
+    }
+  }
+
+  // モーダル外クリックで閉じる
+  document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.add('hidden');
+    });
+  });
+
+  // すでにログイン済みならリダイレクト
+  const session = App.getSession();
+  if (session) {
+    App.redirectByRole(session.role);
+  }
+</script>
+</body>
+</html>

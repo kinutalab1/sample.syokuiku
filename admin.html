@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理者 ページ | たべものたんけんたい</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { background: linear-gradient(160deg, #F5EEFF 0%, #EEF8FF 100%); min-height: 100vh; }
+
+    .admin-header {
+      background: linear-gradient(135deg, #6C3483 0%, #A569BD 100%);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(108,52,131,0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .admin-header-title { color: white; font-size: 1.3rem; font-weight: 900; }
+
+    /* タブ */
+    .tab-bar {
+      display: flex;
+      background: white;
+      border-radius: 50px;
+      padding: 5px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      overflow-x: auto;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      color: var(--text-light);
+      background: transparent;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #6C3483, #A569BD);
+      color: white;
+      box-shadow: 0 3px 10px rgba(108,52,131,0.3);
+    }
+
+    /* KPIカード */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: white;
+      border-radius: 18px;
+      padding: 20px 16px;
+      text-align: center;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+
+    .kpi-icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .kpi-num { font-size: 1.8rem; font-weight: 900; color: #6C3483; line-height: 1; margin-bottom: 4px; }
+    .kpi-label { font-size: 0.72rem; color: var(--text-light); font-weight: 600; }
+
+    /* ユーザーテーブル */
+    .user-table-wrap {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .user-table-header {
+      padding: 20px 24px;
+      border-bottom: 2px solid #F0E8E0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-input {
+      padding: 9px 16px;
+      border: 2px solid #E8DDD8;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      outline: none;
+    }
+
+    .search-input:focus { border-color: #6C3483; }
+
+    .role-filter-btn {
+      padding: 8px 14px;
+      border-radius: 50px;
+      border: 2px solid #E8DDD8;
+      background: white;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-mid);
+    }
+
+    .role-filter-btn.active {
+      border-color: #6C3483;
+      background: #6C3483;
+      color: white;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .admin-table th {
+      padding: 12px 16px;
+      background: #F8F2EE;
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-mid);
+      border-bottom: 2px solid #E8DDD8;
+    }
+
+    .admin-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #F5F0EC;
+      font-size: 0.875rem;
+    }
+
+    .admin-table tr:hover { background: #FBF8FF; }
+
+    .del-btn {
+      padding: 6px 14px;
+      background: #FFE5E5;
+      color: #C0392B;
+      border: 1px solid #FFB3B3;
+      border-radius: 50px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .del-btn:hover { background: #C0392B; color: white; }
+
+    /* 確認ダイアログ */
+    .confirm-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .confirm-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 32px;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* ログ閲覧テーブル */
+    .log-filter {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .activity-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .act-food { background: #FFF0E5; color: #E07040; }
+    .act-pron { background: #E5F8F8; color: #1A9E9E; }
+    .act-quiz { background: #EAFAE5; color: #2E8B57; }
+
+    @media (max-width: 600px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-spinner"></div>
+  <p class="loading-text">よみこみちゅう...</p>
+</div>
+
+<!-- ヘッダー -->
+<header class="admin-header">
+  <div>
+    <div class="admin-header-title">🔒 管理者ダッシュボード</div>
+    <div style="color:rgba(255,255,255,0.8);font-size:0.82rem;" id="adminNameDisp">ようこそ</div>
+  </div>
+  <button class="btn-logout" onclick="App.logout()">ログアウト</button>
+</header>
+
+<div class="main-container fade-in">
+
+  <!-- KPIカード -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon">👥</div>
+      <div class="kpi-num" id="kpiTotal">0</div>
+      <div class="kpi-label">全ユーザー数</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">🧒</div>
+      <div class="kpi-num" id="kpiChildren">0</div>
+      <div class="kpi-label">こども</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">📋</div>
+      <div class="kpi-num" id="kpiLogs">0</div>
+      <div class="kpi-label">活動ログ数</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">⭐</div>
+      <div class="kpi-num" id="kpiAvg">0%</div>
+      <div class="kpi-label">全体平均スコア</div>
+    </div>
+  </div>
+
+  <!-- タブ -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('users', this)">👥 ユーザー管理</button>
+    <button class="tab-btn" onclick="switchTab('logs', this)">📋 活動ログ</button>
+    <button class="tab-btn" onclick="switchTab('charts', this)">📊 統計チャート</button>
+  </div>
+
+  <!-- ===== タブ: ユーザー管理 ===== -->
+  <div id="tabUsers">
+    <div class="user-table-wrap">
+      <div class="user-table-header">
+        <div style="font-size:1rem;font-weight:900;color:var(--text-dark);">
+          👥 ユーザー一覧
+          <span id="userCountBadge" class="badge badge-admin" style="margin-left:8px;">0 名</span>
+        </div>
+        <div class="search-bar">
+          <input type="text" class="search-input" id="userSearch"
+                 placeholder="🔍 名前・メールで検索" oninput="filterUsers()">
+        </div>
+      </div>
+
+      <!-- ロールフィルター -->
+      <div style="padding:12px 24px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #F0E8E0;">
+        <button class="role-filter-btn active" data-role="all" onclick="setRoleFilter(this,'all')">すべて</button>
+        <button class="role-filter-btn" data-role="child" onclick="setRoleFilter(this,'child')">🧒 こども</button>
+        <button class="role-filter-btn" data-role="parent" onclick="setRoleFilter(this,'parent')">👨‍👩‍👧 保護者</button>
+        <button class="role-filter-btn" data-role="teacher" onclick="setRoleFilter(this,'teacher')">👩‍🏫 先生</button>
+        <button class="role-filter-btn" data-role="admin" onclick="setRoleFilter(this,'admin')">🔒 管理者</button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>アバター</th>
+              <th>名前</th>
+              <th>メールアドレス</th>
+              <th>役割</th>
+              <th>クラス</th>
+              <th>登録日</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light);">よみこみちゅう...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== タブ: 活動ログ ===== -->
+  <div id="tabLogs" class="hidden">
+    <div class="card">
+      <div class="section-title">📋 活動ログ一覧</div>
+      <div class="log-filter">
+        <select id="logTypeFilter" class="filter-select" style="padding:9px 14px;border:2px solid #E8DDD8;border-radius:50px;font-family:inherit;outline:none;background:white;"
+                onchange="filterLogs()">
+          <option value="">すべての活動</option>
+          <option value="food_study">🥦 たべもの学習</option>
+          <option value="pronunciation">🎤 はやくちことば</option>
+          <option value="quiz">❓ クイズ</option>
+        </select>
+        <input type="text" id="logNameFilter"
+               style="padding:9px 16px;border:2px solid #E8DDD8;border-radius:50px;font-family:inherit;outline:none;"
+               placeholder="こどもの名前で絞り込み"
+               oninput="filterLogs()">
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>こどもの名前</th>
+              <th>活動種別</th>
+              <th>スコア</th>
+              <th>完了</th>
+              <th>内容</th>
+              <th>日時</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody">
+            <tr><td colspan="6" style="text-align:center;padding:24px;">よみこみちゅう...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== タブ: 統計 ===== -->
+  <div id="tabCharts" class="hidden">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+      <div class="card">
+        <div class="section-title" style="font-size:0.95rem;">👥 ユーザー構成</div>
+        <div style="height:200px;"><canvas id="pieChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="font-size:0.95rem;">📊 活動種別 スコア</div>
+        <div style="height:200px;"><canvas id="typeChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="font-size:0.95rem;">📈 こどもごとの 平均スコア</div>
+      <div style="height:260px;"><canvas id="childScoreChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- 削除確認モーダル -->
+<div id="confirmModal" class="confirm-modal hidden">
+  <div class="confirm-box">
+    <div style="font-size:2.5rem;margin-bottom:12px;">⚠️</div>
+    <div style="font-size:1.1rem;font-weight:700;margin-bottom:8px;">削除の確認</div>
+    <p id="confirmMsg" style="color:var(--text-mid);font-size:0.9rem;margin-bottom:24px;"></p>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button class="btn btn-outline" onclick="closeConfirm()">キャンセル</button>
+      <button class="btn btn-primary" style="background:linear-gradient(135deg,#E74C3C,#C0392B);"
+              id="confirmOkBtn">削除する</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+let session, allUsers = [], allLogs = [];
+let currentRoleFilter = 'all';
+let pieChart, typeChart, childScoreChart;
+
+async function init() {
+  session = App.requireAuth(['admin']);
+  if (!session) return;
+
+  document.getElementById('adminNameDisp').textContent = `${session.name} さん`;
+  App.showLoading();
+
+  try {
+    const userResult = await App.fetchUsers();
+    allUsers = userResult.data || [];
+
+    const logResult = await App.fetchActivityLogs();
+    allLogs = logResult.data || [];
+
+    renderKPI();
+    filterUsers();
+    filterLogs();
+  } catch(e) {
+    console.error(e);
+  }
+
+  App.hideLoading();
+}
+
+function renderKPI() {
+  document.getElementById('kpiTotal').textContent = allUsers.length;
+  document.getElementById('kpiChildren').textContent = allUsers.filter(u => u.role === 'child').length;
+  document.getElementById('kpiLogs').textContent = allLogs.length;
+  const avg = allLogs.length > 0
+    ? Math.round(allLogs.reduce((s,l) => s+(l.score||0), 0) / allLogs.length)
+    : 0;
+  document.getElementById('kpiAvg').textContent = `${avg}%`;
+}
+
+// タブ切り替え
+function switchTab(tab, btn) {
+  ['tabUsers','tabLogs','tabCharts'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+  const capTab = tab.charAt(0).toUpperCase() + tab.slice(1);
+  document.getElementById(`tab${capTab}`).classList.remove('hidden');
+  btn.classList.add('active');
+
+  if (tab === 'charts') renderCharts();
+}
+
+// ===== ユーザー管理 =====
+function setRoleFilter(btn, role) {
+  document.querySelectorAll('.role-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentRoleFilter = role;
+  filterUsers();
+}
+
+function filterUsers() {
+  const search = document.getElementById('userSearch').value.toLowerCase();
+  let filtered = allUsers.filter(u => {
+    const matchSearch = u.child_name?.toLowerCase().includes(search) ||
+                        u.email?.toLowerCase().includes(search);
+    const matchRole = currentRoleFilter === 'all' || u.role === currentRoleFilter;
+    return matchSearch && matchRole;
+  });
+
+  document.getElementById('userCountBadge').textContent = `${filtered.length} 名`;
+
+  const tbody = document.getElementById('userTableBody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light);">ユーザーが見つかりません</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(u => `
+    <tr>
+      <td style="font-size:1.5rem;">${App.getAvatar(u.avatar)}</td>
+      <td style="font-weight:600;">${u.child_name}</td>
+      <td style="color:var(--text-mid);font-size:0.82rem;">${u.email}</td>
+      <td>
+        <span class="badge badge-${u.role}">
+          ${App.roleLabel(u.role)}
+        </span>
+      </td>
+      <td style="color:var(--text-light);font-size:0.82rem;">${u.class_name || '-'}</td>
+      <td style="color:var(--text-light);font-size:0.8rem;">${App.formatDate(u.created_at)}</td>
+      <td>
+        <button class="del-btn" onclick="confirmDelete('${u.id}','${u.child_name}')">
+          削除
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ===== ログ閲覧 =====
+function filterLogs() {
+  const type = document.getElementById('logTypeFilter').value;
+  const name = document.getElementById('logNameFilter').value.toLowerCase();
+
+  let filtered = allLogs.filter(l => {
+    const matchType = !type || l.activity_type === type;
+    const matchName = !name || l.child_name?.toLowerCase().includes(name);
+    return matchType && matchName;
+  });
+
+  const tbody = document.getElementById('logTableBody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-light);">ログが見つかりません</td></tr>';
+    return;
+  }
+
+  const actClass = { food_study: 'act-food', pronunciation: 'act-pron', quiz: 'act-quiz' };
+
+  tbody.innerHTML = [...filtered].reverse().slice(0, 50).map(l => `
+    <tr>
+      <td style="font-weight:600;">${l.child_name}</td>
+      <td>
+        <span class="activity-badge ${actClass[l.activity_type] || ''}">
+          ${App.activityLabel(l.activity_type)}
+        </span>
+      </td>
+      <td style="font-weight:700;color:${App.scoreColor(l.score||0)}">${l.score||0}点</td>
+      <td>${l.completed ? '✅' : '⬜'}</td>
+      <td style="color:var(--text-light);font-size:0.82rem;">${l.details || '-'}</td>
+      <td style="color:var(--text-light);font-size:0.8rem;">${App.formatDate(l.created_at)}</td>
+    </tr>
+  `).join('');
+}
+
+// ===== 統計チャート =====
+function renderCharts() {
+  // ユーザー構成 パイ
+  const children = allUsers.filter(u => u.role === 'child').length;
+  const parents = allUsers.filter(u => u.role === 'parent').length;
+  const teachers = allUsers.filter(u => u.role === 'teacher').length;
+  const admins = allUsers.filter(u => u.role === 'admin').length;
+
+  if (pieChart) pieChart.destroy();
+  pieChart = new Chart(document.getElementById('pieChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['こども', '保護者', '先生', '管理者'],
+      datasets: [{
+        data: [children, parents, teachers, admins],
+        backgroundColor: ['#FFB347', '#A8E063', '#4EC9E8', '#C39BD3'],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 } } }
+      }
+    }
+  });
+
+  // 活動種別スコア
+  const food = allLogs.filter(l => l.activity_type === 'food_study');
+  const pron = allLogs.filter(l => l.activity_type === 'pronunciation');
+  const quiz = allLogs.filter(l => l.activity_type === 'quiz');
+  const avg = arr => arr.length > 0 ? Math.round(arr.reduce((s,l)=>s+(l.score||0),0)/arr.length) : 0;
+
+  if (typeChart) typeChart.destroy();
+  typeChart = new Chart(document.getElementById('typeChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['🥦 たべもの', '🎤 はやくちことば', '❓ クイズ'],
+      datasets: [{
+        data: [avg(food), avg(pron), avg(quiz)],
+        backgroundColor: ['#FF8C69','#4ECDC4','#A8E063'],
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, max: 100 } }
+    }
+  });
+
+  // こどもごとの平均スコア
+  const childrenUsers = allUsers.filter(u => u.role === 'child');
+  const childNames = childrenUsers.map(c => c.child_name);
+  const childScores = childrenUsers.map(c => {
+    const logs = allLogs.filter(l => l.child_name === c.child_name);
+    return avg(logs);
+  });
+  const colors = childScores.map(s => s >= 80 ? '#27AE60' : s >= 60 ? '#F39C12' : '#A8B0C8');
+
+  if (childScoreChart) childScoreChart.destroy();
+  childScoreChart = new Chart(document.getElementById('childScoreChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: childNames,
+      datasets: [{
+        data: childScores,
+        backgroundColor: colors,
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
+      }
+    }
+  });
+}
+
+// ===== 削除 =====
+let deleteTargetId = null;
+
+function confirmDelete(id, name) {
+  deleteTargetId = id;
+  document.getElementById('confirmMsg').textContent =
+    `「${name}」を削除しますか？この操作は元に戻せません。`;
+  document.getElementById('confirmModal').classList.remove('hidden');
+  document.getElementById('confirmOkBtn').onclick = executeDelete;
+}
+
+async function executeDelete() {
+  if (!deleteTargetId) return;
+  closeConfirm();
+  App.showLoading('削除中...');
+
+  try {
+    await fetch(`tables/users/${deleteTargetId}`, { method: 'DELETE' });
+    allUsers = allUsers.filter(u => u.id !== deleteTargetId);
+    renderKPI();
+    filterUsers();
+    App.showToast('✅ 削除しました', 'success');
+  } catch(e) {
+    App.showToast('❌ 削除に失敗しました', 'error');
+  }
+
+  App.hideLoading();
+  deleteTargetId = null;
+}
+
+function closeConfirm() {
+  document.getElementById('confirmModal').classList.add('hidden');
+  deleteTargetId = null;
+}
+
+document.getElementById('confirmModal').addEventListener('click', function(e) {
+  if (e.target === this) closeConfirm();
+});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>せんせい ページ | たべものたんけんたい</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { background: linear-gradient(160deg, #EEF6FF 0%, #FFF8F0 100%); min-height: 100vh; }
+
+    .teacher-header {
+      background: linear-gradient(135deg, #2E86C1 0%, #4EC9E8 100%);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(46, 134, 193, 0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .teacher-header-title {
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 900;
+    }
+
+    /* クラスサマリー */
+    .class-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .class-card {
+      background: white;
+      border-radius: 18px;
+      padding: 18px 12px;
+      text-align: center;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+    }
+
+    .class-card-icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .class-card-num { font-size: 1.8rem; font-weight: 900; color: #2E86C1; line-height: 1; margin-bottom: 4px; }
+    .class-card-label { font-size: 0.72rem; color: var(--text-light); font-weight: 600; }
+
+    /* 検索・フィルター */
+    .filter-bar {
+      background: white;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-input {
+      flex: 1;
+      min-width: 160px;
+      padding: 10px 16px;
+      border: 2px solid #E8DDD8;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      outline: none;
+    }
+
+    .filter-input:focus { border-color: #2E86C1; }
+
+    .filter-select {
+      padding: 10px 16px;
+      border: 2px solid #E8DDD8;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      outline: none;
+      background: white;
+    }
+
+    /* 子ども一覧テーブル */
+    .children-list {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .children-list-header {
+      padding: 20px 24px 16px;
+      border-bottom: 2px solid #F0E8E0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .children-list-title {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--text-dark);
+    }
+
+    .child-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 24px;
+      border-bottom: 1px solid #F8F2EE;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .child-row:hover { background: #F8F4FF; }
+    .child-row:last-child { border-bottom: none; }
+
+    .child-row-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: #FFF0E5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      border: 2px solid #FFD4B8;
+      flex-shrink: 0;
+    }
+
+    .child-row-info { flex: 1; }
+    .child-row-name { font-weight: 700; color: var(--text-dark); font-size: 0.95rem; }
+    .child-row-class { font-size: 0.78rem; color: var(--text-light); margin-top: 2px; }
+
+    .child-row-stats {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .stat-item { text-align: center; }
+    .stat-num { font-weight: 900; font-size: 1rem; }
+    .stat-label { font-size: 0.7rem; color: var(--text-light); }
+
+    .mini-prog {
+      width: 80px;
+    }
+
+    /* 子ども詳細モーダル */
+    .detail-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .detail-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 28px;
+      max-width: 560px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: fadeIn 0.3s ease;
+      position: relative;
+    }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .detail-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #FFF0E5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      border: 3px solid #FFD4B8;
+    }
+
+    .detail-name { font-size: 1.4rem; font-weight: 900; }
+    .detail-class { color: var(--text-light); font-size: 0.875rem; margin-top: 4px; }
+
+    /* チャート */
+    .mini-chart-wrap {
+      height: 200px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .class-summary { grid-template-columns: repeat(2, 1fr); }
+      .child-row-stats { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-spinner"></div>
+  <p class="loading-text">よみこみちゅう...</p>
+</div>
+
+<!-- ヘッダー -->
+<header class="teacher-header">
+  <div>
+    <div class="teacher-header-title">👩‍🏫 せんせい ページ</div>
+    <div style="color:rgba(255,255,255,0.85);font-size:0.82rem;" id="teacherNameDisp">ようこそ</div>
+  </div>
+  <button class="btn-logout" onclick="App.logout()">ログアウト</button>
+</header>
+
+<div class="main-container fade-in">
+
+  <!-- クラスサマリー -->
+  <div class="class-summary">
+    <div class="class-card">
+      <div class="class-card-icon">👧👦</div>
+      <div class="class-card-num" id="sumChildren">0</div>
+      <div class="class-card-label">こどもの数</div>
+    </div>
+    <div class="class-card">
+      <div class="class-card-icon">📅</div>
+      <div class="class-card-num" id="sumActive">0</div>
+      <div class="class-card-label">かつどう中</div>
+    </div>
+    <div class="class-card">
+      <div class="class-card-icon">⭐</div>
+      <div class="class-card-num" id="sumAvgScore">0%</div>
+      <div class="class-card-label">クラス平均</div>
+    </div>
+    <div class="class-card">
+      <div class="class-card-icon">🏆</div>
+      <div class="class-card-num" id="sumTopScore">0%</div>
+      <div class="class-card-label">最高スコア</div>
+    </div>
+  </div>
+
+  <!-- チャート -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="section-title">📊 クラス全体の スコア</div>
+    <div style="height:220px;">
+      <canvas id="classChart"></canvas>
+    </div>
+  </div>
+
+  <!-- 検索フィルター -->
+  <div class="filter-bar">
+    <input type="text" class="filter-input" id="searchInput"
+           placeholder="🔍 こどもの なまえで けんさく"
+           oninput="filterChildren()">
+    <select class="filter-select" id="classFilter" onchange="filterChildren()">
+      <option value="">すべてのクラス</option>
+      <option value="たんぽぽぐみ">たんぽぽぐみ</option>
+      <option value="ひまわりぐみ">ひまわりぐみ</option>
+      <option value="さくらぐみ">さくらぐみ</option>
+      <option value="ほしぐみ">ほしぐみ</option>
+    </select>
+    <select class="filter-select" id="sortFilter" onchange="filterChildren()">
+      <option value="name">なまえじゅん</option>
+      <option value="score_desc">スコアが高い順</option>
+      <option value="score_asc">スコアが低い順</option>
+      <option value="count_desc">かつどう回数が多い順</option>
+    </select>
+  </div>
+
+  <!-- 子ども一覧 -->
+  <div class="children-list">
+    <div class="children-list-header">
+      <div class="children-list-title">👧👦 こども いちらん</div>
+      <span id="childCountBadge" class="badge badge-teacher">0 にん</span>
+    </div>
+    <div id="childrenListBody">
+      <p style="padding:24px;text-align:center;color:var(--text-light);">よみこみちゅう...</p>
+    </div>
+  </div>
+</div>
+
+<!-- 子ども詳細モーダル -->
+<div id="childDetailModal" class="detail-modal hidden">
+  <div class="detail-box">
+    <button onclick="closeDetail()"
+            style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-light);">
+      ✕
+    </button>
+
+    <div class="detail-header">
+      <div class="detail-avatar" id="detailAvatar">🐻</div>
+      <div>
+        <div class="detail-name" id="detailName">---</div>
+        <div class="detail-class" id="detailClass">---</div>
+      </div>
+    </div>
+
+    <!-- サマリー数値 -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+      <div class="class-card">
+        <div class="class-card-num" id="detailCount">0</div>
+        <div class="class-card-label">かつどう回数</div>
+      </div>
+      <div class="class-card">
+        <div class="class-card-num" id="detailScore">0%</div>
+        <div class="class-card-label">へいきんスコア</div>
+      </div>
+      <div class="class-card">
+        <div class="class-card-num" id="detailCompleted">0</div>
+        <div class="class-card-label">かんりょう数</div>
+      </div>
+    </div>
+
+    <!-- 進捗 -->
+    <div class="card" style="margin-bottom:16px;padding:16px;">
+      <div style="font-weight:700;margin-bottom:12px;">📊 しゅるいべつ しんちょく</div>
+      <div id="detailProgress"></div>
+    </div>
+
+    <!-- チャート -->
+    <div style="height:180px;margin-bottom:16px;">
+      <canvas id="detailChart"></canvas>
+    </div>
+
+    <!-- 最近のログ -->
+    <div class="card" style="padding:16px;">
+      <div style="font-weight:700;margin-bottom:12px;">📋 さいきんの かつどう</div>
+      <div id="detailLogs"></div>
+    </div>
+
+    <!-- コメント入力 -->
+    <div style="margin-top:16px;">
+      <label style="font-weight:700;display:block;margin-bottom:8px;">💬 こどもへの コメント</label>
+      <textarea id="detailComment"
+                style="width:100%;border:2px solid #E8DDD8;border-radius:12px;padding:12px;font-family:inherit;font-size:0.9rem;resize:none;outline:none;"
+                rows="3"
+                placeholder="よく がんばっています！"></textarea>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="saveComment()">
+        💾 コメントを保存
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+let session, allChildren = [], allLogs = [], filteredChildren = [];
+let detailChartInstance, classChartInstance;
+
+async function init() {
+  session = App.requireAuth(['teacher']);
+  if (!session) return;
+
+  document.getElementById('teacherNameDisp').textContent = `${session.name} せんせい`;
+  App.showLoading();
+
+  try {
+    const users = await App.fetchUsers();
+    allChildren = (users.data || []).filter(u => u.role === 'child');
+
+    const logResult = await App.fetchActivityLogs();
+    allLogs = logResult.data || [];
+
+    renderSummary();
+    filterChildren();
+    renderClassChart();
+  } catch(e) {
+    console.error(e);
+  }
+
+  App.hideLoading();
+}
+
+function getChildLogs(child) {
+  return allLogs.filter(l => l.child_name === child.child_name);
+}
+
+function getAvgScore(logs) {
+  if (!logs.length) return 0;
+  return Math.round(logs.reduce((s, l) => s + (l.score || 0), 0) / logs.length);
+}
+
+function renderSummary() {
+  document.getElementById('sumChildren').textContent = allChildren.length;
+  const active = allChildren.filter(c => getChildLogs(c).length > 0).length;
+  document.getElementById('sumActive').textContent = active;
+
+  const allScores = allChildren.map(c => getAvgScore(getChildLogs(c)));
+  const avg = allScores.length > 0 ? Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length) : 0;
+  const top = allScores.length > 0 ? Math.max(...allScores) : 0;
+  document.getElementById('sumAvgScore').textContent = `${avg}%`;
+  document.getElementById('sumTopScore').textContent = `${top}%`;
+}
+
+function filterChildren() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const classF = document.getElementById('classFilter').value;
+  const sort = document.getElementById('sortFilter').value;
+
+  filteredChildren = allChildren.filter(c => {
+    const matchName = c.child_name.toLowerCase().includes(search);
+    const matchClass = !classF || c.class_name === classF;
+    return matchName && matchClass;
+  });
+
+  // ソート
+  filteredChildren.sort((a, b) => {
+    const aLogs = getChildLogs(a), bLogs = getChildLogs(b);
+    const aScore = getAvgScore(aLogs), bScore = getAvgScore(bLogs);
+    if (sort === 'score_desc') return bScore - aScore;
+    if (sort === 'score_asc') return aScore - bScore;
+    if (sort === 'count_desc') return bLogs.length - aLogs.length;
+    return a.child_name.localeCompare(b.child_name, 'ja');
+  });
+
+  document.getElementById('childCountBadge').textContent = `${filteredChildren.length} にん`;
+  renderChildList();
+}
+
+function renderChildList() {
+  const body = document.getElementById('childrenListBody');
+  if (filteredChildren.length === 0) {
+    body.innerHTML = '<p style="padding:24px;text-align:center;color:var(--text-light);">こどもが みつかりません</p>';
+    return;
+  }
+
+  body.innerHTML = filteredChildren.map(child => {
+    const logs = getChildLogs(child);
+    const avg = getAvgScore(logs);
+    const color = App.scoreColor(avg);
+
+    return `
+      <div class="child-row" onclick="openDetail('${child.id}')">
+        <div class="child-row-avatar">${App.getAvatar(child.avatar)}</div>
+        <div class="child-row-info">
+          <div class="child-row-name">${child.child_name}ちゃん</div>
+          <div class="child-row-class">${child.class_name || 'クラスなし'}</div>
+        </div>
+        <div class="child-row-stats">
+          <div class="stat-item">
+            <div class="stat-num" style="color:${color}">${avg}%</div>
+            <div class="stat-label">スコア</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num">${logs.length}</div>
+            <div class="stat-label">かつどう</div>
+          </div>
+          <div class="mini-prog">
+            <div class="progress-bar" style="height:10px;">
+              <div class="progress-fill" style="width:${avg}%;background:${color}"></div>
+            </div>
+          </div>
+        </div>
+        <i class="fa fa-chevron-right" style="color:var(--text-light);font-size:0.875rem;"></i>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderClassChart() {
+  const ctx = document.getElementById('classChart').getContext('2d');
+  const names = allChildren.map(c => c.child_name);
+  const scores = allChildren.map(c => getAvgScore(getChildLogs(c)));
+  const colors = scores.map(s => s >= 80 ? '#27AE60' : s >= 60 ? '#F39C12' : '#E74C3C');
+
+  if (classChartInstance) classChartInstance.destroy();
+  classChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [{
+        data: scores,
+        backgroundColor: colors,
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
+      }
+    }
+  });
+}
+
+// 子ども詳細
+let currentDetailChild = null;
+
+function openDetail(childId) {
+  const child = allChildren.find(c => c.id === childId);
+  if (!child) return;
+  currentDetailChild = child;
+
+  const logs = getChildLogs(child);
+  const avg = getAvgScore(logs);
+  const completed = logs.filter(l => l.completed).length;
+
+  document.getElementById('detailAvatar').textContent = App.getAvatar(child.avatar);
+  document.getElementById('detailName').textContent = `${child.child_name}ちゃん`;
+  document.getElementById('detailClass').textContent = child.class_name || 'クラスなし';
+  document.getElementById('detailCount').textContent = logs.length;
+  document.getElementById('detailScore').textContent = `${avg}%`;
+  document.getElementById('detailCompleted').textContent = completed;
+
+  // 種別進捗
+  const types = [
+    { key: 'food_study', label: '🥦 たべもの', color: '#FF8C69' },
+    { key: 'pronunciation', label: '🎤 はやくちことば', color: '#4ECDC4' },
+    { key: 'quiz', label: '❓ クイズ', color: '#A8E063' },
+  ];
+  document.getElementById('detailProgress').innerHTML = types.map(t => {
+    const tLogs = logs.filter(l => l.activity_type === t.key);
+    const sc = getAvgScore(tLogs);
+    return `
+      <div class="progress-row" style="margin-bottom:10px;">
+        <div class="progress-label">${t.label}</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" style="height:12px;">
+            <div class="progress-fill" style="width:${sc}%;background:${t.color}"></div>
+          </div>
+        </div>
+        <div class="progress-pct">${sc}%</div>
+      </div>
+    `;
+  }).join('');
+
+  // ミニチャート
+  if (detailChartInstance) detailChartInstance.destroy();
+  const dCtx = document.getElementById('detailChart').getContext('2d');
+  const recent = logs.slice(-6);
+  detailChartInstance = new Chart(dCtx, {
+    type: 'line',
+    data: {
+      labels: recent.map((_, i) => `${i+1}回目`),
+      datasets: [{
+        data: recent.map(l => l.score || 0),
+        borderColor: '#2E86C1',
+        backgroundColor: 'rgba(46,134,193,0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 5,
+        pointBackgroundColor: '#2E86C1',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, max: 100 } }
+    }
+  });
+
+  // 最近のログ
+  const recentLogs = [...logs].reverse().slice(0, 5);
+  document.getElementById('detailLogs').innerHTML = recentLogs.length > 0
+    ? recentLogs.map(l => `
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F0E8E0;font-size:0.875rem;">
+          <span>${App.activityLabel(l.activity_type)}</span>
+          <span style="font-weight:700;color:${App.scoreColor(l.score||0)}">${l.score||0}点</span>
+        </div>
+      `).join('')
+    : '<p style="color:var(--text-light);font-size:0.875rem;">かつどうが ありません</p>';
+
+  // コメント読み込み
+  const savedComment = localStorage.getItem(`comment_${child.id}`) || '';
+  document.getElementById('detailComment').value = savedComment;
+
+  document.getElementById('childDetailModal').classList.remove('hidden');
+}
+
+function closeDetail() {
+  document.getElementById('childDetailModal').classList.add('hidden');
+  if (detailChartInstance) { detailChartInstance.destroy(); detailChartInstance = null; }
+}
+
+function saveComment() {
+  if (!currentDetailChild) return;
+  const comment = document.getElementById('detailComment').value;
+  localStorage.setItem(`comment_${currentDetailChild.id}`, comment);
+  App.showToast('💾 コメントを保存しました', 'success');
+}
+
+// モーダル外クリック
+document.getElementById('childDetailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDetail();
+});
+
+init();
+</script>
+</body>
+</html>
